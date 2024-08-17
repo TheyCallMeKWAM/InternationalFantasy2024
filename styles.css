@@ -1,0 +1,94 @@
+body {
+    font-family: Krub; 
+    font-weight: 400; 
+    background-repeat: no-repeat;
+    background-size: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#myVideo {
+    position: fixed;
+    right: 50;
+    bottom: -200;
+    min-width: 100%;
+    min-height: 100%;
+    z-index: 1;
+}
+
+.container {
+    background-color: #ffffff86;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+    z-index: 2;
+}
+
+input[type="text"], select {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    background-color: #000000;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #363636;
+}
+
+button:disabled {
+    background-color: #aaa;
+    cursor: not-allowed;
+}
+
+select option[disabled] {
+    color: #888;
+}
+
+.header {
+    margin-bottom: 20px;
+    font-size: 36px;
+    font-weight: 500;
+}
+
+/* Flexbox styles for form rows */
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin: 10px 0;
+}
+
+.form-row > select {
+    width: calc(33.333% - 20px); /* Adjust for three items */
+    margin: 10px;
+}
+
+/* Specific styles for support row */
+.support-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 10px 0;
+}
+
+.support-row > select {
+    width: calc(50% - 20px); /* Adjust for two items */
+    margin: 10px;
+}

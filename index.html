@@ -3,227 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fantasy Submission Form</title>
-    <link rel="stylesheet" href="styles.css"> <!-- Link to external CSS file -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAQJdbBj21r9Cy_p7JmMCOgOnFCidWJXyU",
-            authDomain: "international-fantasy.firebaseapp.com",
-            databaseURL: "https://international-fantasy-default-rtdb.firebaseio.com",
-            projectId: "international-fantasy",
-            storageBucket: "international-fantasy.appspot.com",
-            messagingSenderId: "1084078376703",
-            appId: "1:1084078376703:web:18b55b0d166e34a4782eca"
-        };
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-        document.addEventListener("DOMContentLoaded", function() {
-            const teams = {
-                "Team Spirit": ["Yatoro", "Larl", "Collapse", "Miposhka", "Mira"],
-                "Xtreme Gaming": ["Paparazi", "JT-", "Dy", "Pyw", "Old eLeVeN"],
-                "Falcons": ["Ilyas", "Nemiga", "Lightless", "Nofear", "Alohadance"],
-                "Team Liquid": ["miCKe", "Nisha", "Zai", "Boxi", "Insania"],
-                "Gaimin Gladiators": ["Quinn", "Ace", "Dyrachyo", "tOfu", "Seleri"],
-                "BetBoom Team": ["Pure", "gpk", "Nightfall", "Save-", "TORONTOTOKYO"],
-                "Entity": ["Watson", "Stormstormer", "Tobi", "Fishman", "Kataomi`"],
-                "Tundra Esports": ["Skiter", "Nine", "33", "Saksa", "Aui_2000"],
-                "1win": ["Noticed", "Heaven", "Crystallize", "RodjER", "KingR"],
-                "Team Zero": ["Ghost", "Oli", "Somnus", "fy", "xNova"],
-                "G2.iG": ["Emo", "Flyfly", "Kaka", "Oli", "JT-"],
-                "Talon Esports": ["23savage", "Mikoto", "Jabz", "Q", "Hyde"],
-                "Aurora": ["Sico", "Maksim", "Xolotl", "Jinjing", "Miaomiao"],
-                "nouns": ["Gunnar", "Moo", "Lelis", "Husky", "Zfreek"],
-                "HEROIC": ["Kadaris", "Meir", "Zenden", "Creed", "Vaden"],
-                "beastcoast": ["K1", "Chris Luck", "Whisper", "Scofield", "Stinger"]
-            };
-            const nameInputId = "userName";
-            const cptDropdownId = "cpt";
-            const carryDropdownIds = ["carry1", "carry2", "carry3"];
-            const supportDropdownIds = ["support4", "support5"];
-            const teamDropdownId = "teamDropdown";
-            function clearDropdown(id) {
-                const dropdownMenu = document.getElementById(id);
-                dropdownMenu.innerHTML = ""; // Clear existing options
-            }
-            function populateDropdown(id, teams, filterFunction, placeholderText) {
-                const dropdownMenu = document.getElementById(id);
-                clearDropdown(id);
-                // Add placeholder option
-                const placeholderOption = document.createElement("option");
-                placeholderOption.text = placeholderText;
-                placeholderOption.value = "";
-                placeholderOption.disabled = true;
-                placeholderOption.selected = true;
-                dropdownMenu.appendChild(placeholderOption);
-                for (const team in teams) {
-                    let optgroup = document.createElement("optgroup");
-                    optgroup.label = team;
-                    teams[team].filter(filterFunction).forEach(player => {
-                        let option = document.createElement("option");
-                        option.text = player;
-                        option.value = player;
-                        optgroup.appendChild(option);
-                    });
-                    dropdownMenu.appendChild(optgroup);
-                }
-            }
-            // Populate Captain dropdown (all players) with placeholder "Select Captain"
-            populateDropdown(cptDropdownId, teams, () => true, "CPT");
-            // Populate Carry dropdowns (first 3 players) with placeholder "Select Core"
-            carryDropdownIds.forEach(id => {
-                populateDropdown(id, teams, (player, index) => index < 3, "CORE");
-            });
-            // Populate Support dropdowns (last 2 players) with placeholder "Select Support"
-            supportDropdownIds.forEach(id => {
-                populateDropdown(id, teams, (player, index, array) => index >= array.length - 2, "SUPPORT");
-            });
-            // Function to populate dropdown with just team names with placeholder "Select Team"
-            function populateTeamDropdown() {
-                const dropdownMenu = document.getElementById(teamDropdownId);
-                clearDropdown(teamDropdownId);
-                // Add placeholder option
-                const placeholderOption = document.createElement("option");
-                placeholderOption.text = "TEAM";
-                placeholderOption.value = "";
-                placeholderOption.disabled = true;
-                placeholderOption.selected = true;
-                dropdownMenu.appendChild(placeholderOption);
-                for (const team in teams) {
-                    let option = document.createElement("option");
-                    option.text = team;
-                    option.value = team;
-                    dropdownMenu.appendChild(option);
-                }
-            }
-            // Call populateTeamDropdown function
-            populateTeamDropdown();
-            // Function to check if all fields are filled out
-            function areAllFieldsFilled() {
-                const userName = document.getElementById(nameInputId).value;
-                const cpt = document.getElementById(cptDropdownId).value;
-                const carry1 = document.getElementById("carry1").value;
-                const carry2 = document.getElementById("carry2").value;
-                const carry3 = document.getElementById("carry3").value;
-                const support4 = document.getElementById("support4").value;
-                const support5 = document.getElementById("support5").value;
-                const team = document.getElementById("teamDropdown").value;
-                return userName && cpt && carry1 && carry2 && carry3 && support4 && support5 && team;
-            }
-            // Function to check if any dropdowns have duplicate values
-            function haveDuplicateSelections() {
-                const values = [
-                    document.getElementById(cptDropdownId).value,
-                    document.getElementById("carry1").value,
-                    document.getElementById("carry2").value,
-                    document.getElementById("carry3").value,
-                    document.getElementById("support4").value,
-                    document.getElementById("support5").value,
-                    document.getElementById("teamDropdown").value
-                ];
-                const uniqueValues = new Set(values);
-                return uniqueValues.size !== values.length;
-            }
-            // Function to check if more than 4 selections are from the same team
-            function isTeamLimitExceeded() {
-                const teamCounts = {};
-                const teamName = document.getElementById("teamDropdown").value;
-                const values = [
-                    document.getElementById(cptDropdownId).value,
-                    document.getElementById("carry1").value,
-                    document.getElementById("carry2").value,
-                    document.getElementById("carry3").value,
-                    document.getElementById("support4").value,
-                    document.getElementById("support5").value
-                ];
-                values.forEach(player => {
-                    for (const team in teams) {
-                        if (teams[team].includes(player)) {
-                            if (!teamCounts[team]) {
-                                teamCounts[team] = 0;
-                            }
-                            teamCounts[team]++;
-                        }
-                    }
-                });
-                if (teamName) {
-                    if (!teamCounts[teamName]) {
-                        teamCounts[teamName] = 0;
-                    }
-                    teamCounts[teamName]++;
-                }
-                return Object.values(teamCounts).some(count => count > 4);
-            }
-            document.getElementById("submitButton").addEventListener("click", function() {
-                if (!areAllFieldsFilled()) {
-                    alert("Please fill out all fields.");
-                    return;
-                }
-                if (haveDuplicateSelections()) {
-                    alert("Please ensure no two dropdowns have the same value.");
-                    return;
-                }
-                if (isTeamLimitExceeded()) {
-                    alert("You cannot select more than 4 players from the same team.");
-                    return;
-                }
-                const userName = document.getElementById(nameInputId).value;
-                const cpt = document.getElementById(cptDropdownId).value;
-                const carry1 = document.getElementById("carry1").value;
-                const carry2 = document.getElementById("carry2").value;
-                const carry3 = document.getElementById("carry3").value;
-                const support4 = document.getElementById("support4").value;
-                const support5 = document.getElementById("support5").value;
-                const team = document.getElementById("teamDropdown").value;
-                const submissionsRef = ref(database, 'submissions/');
-                const newSubmissionRef = push(submissionsRef);
-                const submissionData = {
-                    userName: userName,
-                    captain: cpt,
-                    carry1: carry1,
-                    carry2: carry2,
-                    carry3: carry3,
-                    support4: support4,
-                    support5: support5,
-                    team: team
-                };
-                set(newSubmissionRef, submissionData)
-                    .then(() => {
-                        console.log('Data submitted successfully.');
-                    })
-                    .catch((error) => {
-                        console.error('Error submitting data: ', error);
-                    });
-            });
-        });
-    </script>
+    <title>Player Scores</title>
+    <link rel="stylesheet" href="index.css">
 </head>
 <body>
     <video autoplay muted loop id="myVideo">
         <source src="ti10_background.mp4" type="video/mp4">
-      </video>
-
+    </video>
     <div class="container">
-        <div class="header">FANTASY SUBMISSION FORM</div>
-        <input type="text" id="userName" placeholder="NAME">
-        <select id="cpt"></select>
+        <h1>Player Scores</h1>  
 
-        <div class="form-row">
-            <select id="carry1"></select>
-            <select id="carry2"></select>
-            <select id="carry3"></select>
+        <!-- Sort button -->
+
+        <table id="scheduleTable">
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Day 1</th>
+                    <th>Day 2</th>
+                    <th>Day 3</th>
+                    <th>Day 4</th>
+                    <th>Day 5</th>
+                    <th>Day 6</th>
+                    <th>Day 7</th>
+                    <th>Day 8</th>
+                    <th>Day 9</th>
+                    <th>Day 10</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="playerScoresBody">
+                <!-- Rows will be dynamically populated here -->
+            </tbody>
+        </table>
+        <div class="sort-buttons">
+            <button onclick="sortTableByTotal()">Sort by Total Score</button>
         </div>
 
-        <div class="support-row">
-            <select id="support4"></select>
-            <select id="support5"></select>
-        </div>
-
-        <select id="teamDropdown"></select>
-        <button type="button" id="submitButton">Submit</button>
+        <table id="highestScorerTable">
+            <thead>
+                <tr>
+                    <th>Highest Group Stage Total</th>
+                    <th>Score</th>
+                    <th>Highest Playoff Total</th>
+                    <th>Score</th>
+                    <th>Highest Finals Total</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td id="highestGroupStageType">-</td>
+                    <td id="highestGroupStageScore">-</td>
+                    <td id="highestPlayoffType">-</td>
+                    <td id="highestPlayoffScore">-</td>
+                    <td id="highestFinalsType">-</td>
+                    <td id="highestFinalsScore">-</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
+    
+    <script>
+        // Player scores data (add scores for each player)
+        const playerScores = [
+            { name: "William", scores: [] },
+            { name: "Aiden", scores: [] },
+            { name: "Daniel", scores: [] },
+            { name: "Evan", scores: [] },
+            { name: "Sean", scores: [] },
+            // Add more players as needed
+        ];
+    
+        // Get the table body element
+        const tableBody = document.getElementById('playerScoresBody');
+    
+        // Function to populate the table with player data
+        function populateTable() {
+            tableBody.innerHTML = ''; // Clear previous rows
+            let highestGroupStageScore = 0;
+            let highestPlayoffScore = 0;
+            let highestFinalsScore = 0;
+            let highestGroupStagePlayer = '';
+            let highestPlayoffPlayer = '';
+            let highestFinalsPlayer = '';
+
+            playerScores.forEach(player => {
+                const row = document.createElement('tr');
+                
+                // Add the player's name
+                const nameCell = document.createElement('td');
+                nameCell.textContent = player.name;
+                row.appendChild(nameCell);
+                
+                // Add the player's scores and total
+                let totalScore = 0;
+                for (let i = 0; i < 10; i++) {
+                    const scoreCell = document.createElement('td');
+                    const score = player.scores[i] || '-'; // Display '-' if score is not available
+                    scoreCell.textContent = score !== '-' ? score : '-';
+                    row.appendChild(scoreCell);
+                    
+                    // Add to total if score is a number
+                    if (score !== '-') {
+                        totalScore += score;
+                    }
+                }
+                
+                // Add the total score
+                const totalCell = document.createElement('td');
+                totalCell.classList.add('total');
+                totalCell.textContent = totalScore > 0 ? totalScore.toFixed(2) : '-';
+                row.appendChild(totalCell);
+                
+                // Append the row to the table
+                tableBody.appendChild(row);
+
+                // Calculate group stage, playoff, and finals totals
+                const groupStageScore = (player.scores[0] || 0) + (player.scores[1] || 0);
+                const playoffScore = (player.scores[2] || 0) + (player.scores[3] || 0) + (player.scores[4] || 0) + (player.scores[5] || 0) + (player.scores[6] || 0);
+                const finalsScore = (player.scores[7] || 0) + (player.scores[8] || 0) + (player.scores[9] || 0);
+
+                if (groupStageScore > highestGroupStageScore) {
+                    highestGroupStageScore = groupStageScore;
+                    highestGroupStagePlayer = player.name;
+                }
+                if (playoffScore > highestPlayoffScore) {
+                    highestPlayoffScore = playoffScore;
+                    highestPlayoffPlayer = player.name;
+                }
+                if (finalsScore > highestFinalsScore) {
+                    highestFinalsScore = finalsScore;
+                    highestFinalsPlayer = player.name;
+                }
+            });
+
+            // Update the highest scores table
+            document.getElementById('highestGroupStageType').textContent = highestGroupStagePlayer;
+            document.getElementById('highestGroupStageScore').textContent = highestGroupStageScore.toFixed(2);
+            document.getElementById('highestPlayoffType').textContent = highestPlayoffPlayer;
+            document.getElementById('highestPlayoffScore').textContent = highestPlayoffScore.toFixed(2);
+            document.getElementById('highestFinalsType').textContent = highestFinalsPlayer;
+            document.getElementById('highestFinalsScore').textContent = highestFinalsScore.toFixed(2);
+        }
+
+        // Function to sort the table by total score
+        function sortTableByTotal() {
+            playerScores.sort((a, b) => {
+                const totalA = a.scores.reduce((acc, curr) => acc + (curr || 0), 0);
+                const totalB = b.scores.reduce((acc, curr) => acc + (curr || 0), 0);
+                return totalB - totalA; // Sort in descending order
+            });
+            populateTable(); // Re-populate the table after sorting
+        }
+
+        // Initial population of the table
+        populateTable();
+    </script>
 </body>
 </html>

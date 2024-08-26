@@ -8,6 +8,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+
         // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAQJdbBj21r9Cy_p7JmMCOgOnFCidWJXyU",
@@ -18,38 +19,42 @@
             messagingSenderId: "1084078376703",
             appId: "1:1084078376703:web:18b55b0d166e34a4782eca"
         };
+
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
+
         document.addEventListener("DOMContentLoaded", function() {
             const teams = {
-            "Team Spirit": ["Raddan", "Larl", "Collapse", "Mira", "Miposhka"],
-            "Xtreme Gaming": ["Ame", "Xm", "Xxs", "XinQ", "Dy"],
-            "Team Falcons": ["skiter", "Malr1ne", "AMMAR_THE_F", "Cr1t-", "Sneyking"],
-            "Team Liquid": ["miCKe", "Nisha", "33", "Boxi", "Insania"],
-            "Gaimin Gladiators": ["dyrachyo", "Quinn", "Ace ♠", "tOfu", "Seleri"],
-            "BetBoom Team": ["Saika", "gpk~", "MieRo`", "Save-", "TORONTOTOKYO"],
-            "Cloud9": ["医者watson`", "No[o]ne-", "DM", "Kataomi`", "Fishman"],
-            "Tundra Esports": ["Pure", "Topson", "Tobi", "9Class", "Whitemon"],
-            "1win": ["Munkushi~", "CHIRA_JUNIOR", "Cloud", "swedenstrong", "RESPECT"],
-            "Team Zero": ["YSR-04E", "7eeeeeee", "Beyond", "ponlo", "zzq"],
-            "G2 x iG": ["Monet", "NothingToSay", "-JT", "BoBoKa", "xNova"],
-            "Talon Esports": ["Akashi", "Mikoto", "Ws`", "Jhocam", "ponyo"],
-            "Aurora": ["23savage", "lorenof", "Jabz", "Q", "Oli~"],
-            "nouns": ["Yuma", "Copy", "Gunnar", "Lelis", "Fly"],
-            "HEROIC": ["k1 hector tqmM", "4nalog <01", "Davai Lama", "Scofield", "KingJungles"],
-            "beastcoast": ["payk", "Lumpy", "Vitaly 誇り", "Elmisho", "MoOz"]
-        };
+                "Team Spirit": ["Raddan", "Larl", "Collapse", "Mira", "Miposhka"],
+                "Xtreme Gaming": ["Ame", "Xm", "Xxs", "XinQ", "Dy"],
+                "Team Falcons": ["skiter", "Malr1ne", "AMMAR_THE_F", "Cr1t-", "Sneyking"],
+                "Team Liquid": ["miCKe", "Nisha", "33", "Boxi", "Insania"],
+                "Gaimin Gladiators": ["dyrachyo", "Quinn", "Ace ♠", "tOfu", "Seleri"],
+                "BetBoom Team": ["Saika", "gpk~", "MieRo`", "Save-", "TORONTOTOKYO"],
+                "Cloud9": ["医者watson`", "No[o]ne-", "DM", "Kataomi`", "Fishman"],
+                "Tundra Esports": ["Pure", "Topson", "Tobi", "9Class", "Whitemon"],
+                "1win": ["Munkushi~", "CHIRA_JUNIOR", "Cloud", "swedenstrong", "RESPECT"],
+                "Team Zero": ["YSR-04E", "7eeeeeee", "Beyond", "ponlo", "zzq"],
+                "G2 x iG": ["Monet", "NothingToSay", "-JT", "BoBoKa", "xNova"],
+                "Talon Esports": ["Akashi", "Mikoto", "Ws`", "Jhocam", "ponyo"],
+                "Aurora": ["23savage", "lorenof", "Jabz", "Q", "Oli~"],
+                "nouns": ["Yuma", "Copy", "Gunnar", "Lelis", "Fly"],
+                "HEROIC": ["k1 hector tqmM", "4nalog <01", "Davai Lama", "Scofield", "KingJungles"],
+                "beastcoast": ["payk", "Lumpy", "Vitaly 誇り", "Elmisho", "MoOz"]
+            };
 
             const nameInputId = "userName";
             const cptDropdownId = "cpt";
             const carryDropdownIds = ["carry1", "carry2", "carry3"];
             const supportDropdownIds = ["support4", "support5"];
             const teamDropdownId = "teamDropdown";
+
             function clearDropdown(id) {
                 const dropdownMenu = document.getElementById(id);
                 dropdownMenu.innerHTML = ""; // Clear existing options
             }
+
             function populateDropdown(id, teams, filterFunction, placeholderText) {
                 const dropdownMenu = document.getElementById(id);
                 clearDropdown(id);
@@ -72,16 +77,20 @@
                     dropdownMenu.appendChild(optgroup);
                 }
             }
+
             // Populate Captain dropdown (all players) with placeholder "Select Captain"
             populateDropdown(cptDropdownId, teams, () => true, "CPT");
+
             // Populate Carry dropdowns (first 3 players) with placeholder "Select Core"
             carryDropdownIds.forEach(id => {
                 populateDropdown(id, teams, (player, index) => index < 3, "CORE");
             });
+
             // Populate Support dropdowns (last 2 players) with placeholder "Select Support"
             supportDropdownIds.forEach(id => {
                 populateDropdown(id, teams, (player, index, array) => index >= array.length - 2, "SUPPORT");
             });
+
             // Function to populate dropdown with just team names with placeholder "Select Team"
             function populateTeamDropdown() {
                 const dropdownMenu = document.getElementById(teamDropdownId);
@@ -100,8 +109,10 @@
                     dropdownMenu.appendChild(option);
                 }
             }
+
             // Call populateTeamDropdown function
             populateTeamDropdown();
+
             // Function to check if all fields are filled out
             function areAllFieldsFilled() {
                 const userName = document.getElementById(nameInputId).value;
@@ -114,6 +125,7 @@
                 const team = document.getElementById("teamDropdown").value;
                 return userName && cpt && carry1 && carry2 && carry3 && support4 && support5 && team;
             }
+
             // Function to check if any dropdowns have duplicate values
             function haveDuplicateSelections() {
                 const values = [
@@ -128,6 +140,7 @@
                 const uniqueValues = new Set(values);
                 return uniqueValues.size !== values.length;
             }
+
             // Function to check if more than 4 selections are from the same team
             function isTeamLimitExceeded() {
                 const teamCounts = {};
@@ -158,6 +171,8 @@
                 }
                 return Object.values(teamCounts).some(count => count > 4);
             }
+
+            // Handle form submission
             document.getElementById("submitButton").addEventListener("click", function() {
                 if (!areAllFieldsFilled()) {
                     alert("Please fill out all fields.");
@@ -193,6 +208,7 @@
                 };
                 set(newSubmissionRef, submissionData)
                     .then(() => {
+                        alert("Lineup submitted successfully!");
                         console.log('Data submitted successfully.');
                     })
                     .catch((error) => {
@@ -209,14 +225,13 @@
             <a href="submit.html">SUBMIT LINEUP</a>
         </div>
         <div class="links">
-            <a href="https://liquipedia.net/dota2/The_International/2024" target=”_blank>LIQUIPEDIA</a>
+            <a href="https://liquipedia.net/dota2/The_International/2024" target="_blank">LIQUIPEDIA</a>
         </div>
     </div>
 
-
     <video autoplay muted loop id="myVideo">
         <source src="ti10_background.mp4" type="video/mp4">
-      </video>
+    </video>
 
     <div class="container">
         <div class="header">FANTASY SUBMISSION FORM</div>

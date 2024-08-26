@@ -9,6 +9,34 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    background-color: black;
+}
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.281); /* Adjust transparency */
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    z-index: 1000; /* Ensures it stays on top */
+}
+.navbar .links {
+    display: flex;
+    gap: 10px;
+    font-weight: bold;
+}
+.navbar .links a {
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    font-size: 16px;
+}
+.navbar .links a:hover {
+    text-decoration: underline;
 }
 
 #myVideo {

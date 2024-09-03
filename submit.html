@@ -25,6 +25,8 @@
         const database = getDatabase(app);
 
         document.addEventListener("DOMContentLoaded", function() {
+            const googleScriptURL = "https://script.google.com/macros/s/AKfycbxCDe6LMLKAYOrIrnruoj8MR3jA8TKLWpnzwmw8V4OTyWw4p7scq4zpWvMUMwLMRvqh/exec";  // Replace with your Google Apps Script URL
+
             const teams = {
                 "Team Spirit": ["Raddan", "Larl", "Collapse", "Mira", "Miposhka"],
                 "Xtreme Gaming": ["Ame", "Xm", "Xxs", "XinQ", "Dy"],
@@ -186,34 +188,42 @@
                     alert("You cannot select more than 4 players from the same team.");
                     return;
                 }
-                const userName = document.getElementById(nameInputId).value;
-                const cpt = document.getElementById(cptDropdownId).value;
-                const carry1 = document.getElementById("carry1").value;
-                const carry2 = document.getElementById("carry2").value;
-                const carry3 = document.getElementById("carry3").value;
-                const support4 = document.getElementById("support4").value;
-                const support5 = document.getElementById("support5").value;
-                const team = document.getElementById("teamDropdown").value;
+
+                const submissionData = {
+                    userName: document.getElementById("userName").value,
+                    captain: document.getElementById("cpt").value,
+                    carry1: document.getElementById("carry1").value,
+                    carry2: document.getElementById("carry2").value,
+                    carry3: document.getElementById("carry3").value,
+                    support4: document.getElementById("support4").value,
+                    support5: document.getElementById("support5").value,
+                    team: document.getElementById("teamDropdown").value
+                };
+
+                // Save to Firebase
                 const submissionsRef = ref(database, 'submissions/');
                 const newSubmissionRef = push(submissionsRef);
-                const submissionData = {
-                    userName: userName,
-                    captain: cpt,
-                    carry1: carry1,
-                    carry2: carry2,
-                    carry3: carry3,
-                    support4: support4,
-                    support5: support5,
-                    team: team
-                };
                 set(newSubmissionRef, submissionData)
                     .then(() => {
-                        alert("Lineup submitted successfully!");
-                        console.log('Data submitted successfully.');
+                        console.log('Data submitted to Firebase successfully.');
                     })
                     .catch((error) => {
-                        console.error('Error submitting data: ', error);
+                        console.error('Error submitting data to Firebase: ', error);
                     });
+
+                // Save to Google Sheets
+                fetch(googleScriptURL, {
+                    method: 'POST',
+                    body: JSON.stringify(submissionData)
+                })
+                .then(response => response.text())
+                .then(result => {
+                    alert("Lineup submitted successfully!");
+                    console.log('Data submitted to Google Sheets successfully.');
+                })
+                .catch(error => {
+                    console.error('Error submitting data to Google Sheets: ', error);
+                });
             });
         });
     </script>
@@ -235,7 +245,7 @@
 
     <div class="container">
         <div class="header">FANTASY SUBMISSION FORM</div>
-        <input type="text" id="userName" placeholder="NAME">
+        <input type="text" id="userName" placeholder="DISCORD USERNAME">
         <select id="cpt"></select>
 
         <div class="form-row">

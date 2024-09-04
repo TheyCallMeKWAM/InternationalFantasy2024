@@ -53,7 +53,7 @@ player_dict = {
     "Nisha": 201358612,
     "33": 86698277,
     "Seleri": 91730177,
-    "Ace ♠": 97590558,
+    "Ace": 97590558,
     "tOfu": 16497807,
     "dyrachyo": 116934015,
     "Quinn": 221666230,
@@ -119,27 +119,18 @@ player_dict = {
     "No[o]ne-": 106573901
 }
 
-# Cache for match data
-match_data_cache = {}
-
-# API request function with retry logic
 def get_match_data(match_id):
-    if match_id in match_data_cache:
-        return match_data_cache[match_id]
-
-    retries = 3
+    retries = 1
     for _ in range(retries):
         try:
             response = requests.get(f'{OPENDOTA_MATCH_URL}{match_id}')
             response.raise_for_status()
             match_data = response.json()
-            match_data_cache[match_id] = match_data
             return match_data
         except requests.RequestException as e:
             logging.error(f"Error fetching match data for match ID {match_id}: {e}")
     return {}
 
-# Scoring calculation
 def calculate_player_score(player_data):
     score = sum(
         player_data.get(stat, 0) * multiplier
@@ -149,72 +140,55 @@ def calculate_player_score(player_data):
     return score
 
 def count_destroyed_towers(bitmask):
-    # Convert bitmask to a binary string
-    bitmask_binary = bin(bitmask)[2:].zfill(11)  # Ensure 16 bits for proper representation
+    bitmask_binary = bin(bitmask)[2:].zfill(11)
     destroyed_towers = bitmask_binary.count('0')
     return destroyed_towers
 
-
 def count_destroyed_barracks(bitmask):
-    # Convert bitmask to a binary string
-    bitmask_binary = bin(bitmask)[2:].zfill(6)  # Ensure 8 bits for proper representation
+    bitmask_binary = bin(bitmask)[2:].zfill(6)
     destroyed_barracks = bitmask_binary.count('0')
     return destroyed_barracks
 
-
-def process_tower_status(bitmask, team_side):
-    # Directly get the number of destroyed towers
-    destroyed_towers = count_destroyed_towers(bitmask)    
-    return destroyed_towers
-
-def calculate_team_score(match_data, team_name, match_id):
+def calculate_team_score(match_data, team_name):
     team_score = 0
 
-    # Identify if the team is Radiant or Dire
     radiant_team = match_data.get('radiant_name', '')
     dire_team = match_data.get('dire_name', '')
 
     if team_name == radiant_team:
-        team_side = 'radiant'
-        # Use Dire team's bitmask to determine Radiant team destroyed towers and barracks
         tower_status_bitmask = match_data.get('tower_status_dire', 0)
         barrack_status_bitmask = match_data.get('barracks_status_dire', 0)
         win = match_data.get('radiant_win')
     elif team_name == dire_team:
-        team_side = 'dire'
-        # Use Radiant team's bitmask to determine Dire team destroyed towers and barracks
         tower_status_bitmask = match_data.get('tower_status_radiant', 0)
         barrack_status_bitmask = match_data.get('barracks_status_radiant', 0)
         win = not match_data.get('radiant_win')
     else:
         return team_score
 
-    # Add tower kills (adjusted to reflect destroyed towers of the other team)
     destroyed_towers = count_destroyed_towers(tower_status_bitmask)
     team_score += destroyed_towers * TEAM_SCORING_VALUES['tower_kills']
 
-    # Add barracks kills (adjusted to reflect destroyed barracks of the other team)
     destroyed_barracks = count_destroyed_barracks(barrack_status_bitmask)
     team_score += destroyed_barracks * TEAM_SCORING_VALUES['barrack_kills']
 
-    # Check if the team won
     if win:
         team_score += TEAM_SCORING_VALUES['win']
 
-    # First blood
     first_blood = 0
     for objective in match_data.get('objectives', []):
-        if objective.get('type') == 'CHAT_MESSAGE_FIRSTBLOOD' and (
-            (objective.get('player_slot') < 128 and team_side == 'radiant') or 
-            (objective.get('player_slot') >= 128 and team_side == 'dire')):
-            first_blood += TEAM_SCORING_VALUES['first_blood']
+        if objective.get('type') == 'CHAT_MESSAGE_FIRSTBLOOD':
+            player_slot = objective.get('player_slot')
+            if (player_slot < 128 and team_name == radiant_team) or (player_slot >= 128 and team_name == dire_team):
+                first_blood += TEAM_SCORING_VALUES['first_blood']
+                break
 
+    team_score += first_blood
 
     logging.debug(f"Calculated team score: {team_score} for team '{team_name}'")
     return team_score
 
-# Process player
-def process_player(player_name, match_ids, player_dict):
+def process_player(player_name, match_data_cache):
     player_id = player_dict.get(player_name)
     if not player_id:
         logging.warning(f"Player ID not found for {player_name}")
@@ -223,8 +197,7 @@ def process_player(player_name, match_ids, player_dict):
     player_score = 0
     found_in_any_match = False
 
-    for match_id in match_ids:
-        match_data = get_match_data(match_id)
+    for match_id, match_data in match_data_cache.items():
         player_data = next((p for p in match_data.get('players', []) if p.get('account_id') == player_id), {})
         
         if player_data:
@@ -237,58 +210,79 @@ def process_player(player_name, match_ids, player_dict):
     logging.debug(f"Total player score for {player_name}: {player_score}")
     return player_score
 
-def process_team(team_name, match_ids):
-    team_score = 0
-
-    for match_id in match_ids:
-        match_data = get_match_data(match_id)
-        team_score += calculate_team_score(match_data, team_name, match_id)
-
-    return team_score
-
-def process_submission(submission_id, submission, player_dict):
+def process_submission(submission_id, submission, match_data_cache):
     user_name = submission.get('userName', 'Unknown User')
     team_name = submission.get('team', 'Unknown Team')
-    match_ids = [7406531302, 7406482053, 7406424070, 7402900929]  # Example match IDs, update as needed
 
-    # Calculate player score
     players = {role: submission.get(role, 'Unknown Player') for role in ['captain', 'carry1', 'carry2', 'carry3', 'support4', 'support5']}
     
-    # Get the captain's name and calculate their score with bonus
     captain_name = players.get('captain')
     player_scores = {}
     if captain_name and captain_name != 'Unknown Player':
-        player_scores[captain_name] = process_player(captain_name, match_ids, player_dict) * 1.5
+        player_scores[captain_name] = process_player(captain_name, match_data_cache) * 1.5
 
-    # Calculate scores for other players
     player_scores.update({
-        player_name: process_player(player_name, match_ids, player_dict)
+        player_name: process_player(player_name, match_data_cache)
         for role, player_name in players.items()
         if player_name != 'Unknown Player' and role != 'captain'
     })
     
-    # Total player score including captain's bonus
     total_player_score = sum(player_scores.values())
-    
-    # Calculate team score
-    total_team_score = process_team(team_name, match_ids)
+    total_team_score = sum(calculate_team_score(match_data_cache[match_id], team_name) for match_id in match_data_cache)
 
-    # Log player scores with actual names
     player_scores_log = ', '.join(f"{name}: {score}" for name, score in player_scores.items())
     logging.info(f"Player scores for submission {user_name}: {player_scores_log}, team: {total_team_score}")
 
-    # Combine player and team scores
     total_score = total_player_score + total_team_score
     logging.info(f"Total score for submission {user_name}: {total_score}")
 
     return total_score
 
 def main():
+    match_ids = [7927665228,
+                7927715273,
+                7927665254,
+                7927711289,
+                7927906150,
+                7928009336,
+                7928115077,
+                7928205327,
+
+                7927665226,
+                7927718184,
+                7927758752,
+                7927814402,
+                7928077736,
+                7928185091,
+
+                7927758213,
+                7927826080,
+                7927766744,
+                7927835333,
+                7928100793,
+                7928200136,
+                7928291729,
+                7928380785,
+
+                7927914488,
+                7928006446,
+                7927895267,
+                7927995323,
+                7928288761,
+                7928396832,
+                7928291791,
+                7928364306]  # Example match IDs
+
+    # Fetch match data once and store in a cache
+    match_data_cache = {}
+    for match_id in match_ids:
+        match_data_cache[match_id] = get_match_data(match_id)
+
     results = {}
     
     with ThreadPoolExecutor() as executor:
         futures = {
-            submission_id: executor.submit(process_submission, submission_id, submission, player_dict)
+            submission_id: executor.submit(process_submission, submission_id, submission, match_data_cache)
             for submission_id, submission in submissions.items()
         }
 

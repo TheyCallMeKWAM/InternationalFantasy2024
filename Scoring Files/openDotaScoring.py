@@ -116,7 +116,8 @@ player_dict = {
     "Fishman": 127565532,
     "医者watson": 171262902,
     "DM": 56351509,
-    "No[o]ne-": 106573901
+    "No[o]ne-": 106573901,
+    "Saksa": 103735745
 }
 
 def get_match_data(match_id):

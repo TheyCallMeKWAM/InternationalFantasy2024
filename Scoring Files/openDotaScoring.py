@@ -78,7 +78,7 @@ player_dict = {
     "Fly": 94155156,
     "Copy": 115651292,
     "KingJungles": 81306398,
-    "k1 hector tqmM": 164685175,
+    "The Héctor 'K1' Rodríguez": 164685175,
     "4nalog <01": 131303632,
     "Davai Lama": 138880576,
     "Scofield": 157989498,

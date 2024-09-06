@@ -69,6 +69,11 @@ table,
     border-collapse: collapse;
     background-color: rgba(0, 0, 0, 0.5);
 }
+
+.winner{
+    background-color: rgba(81, 255, 81, 0.233);
+
+}
 button {
     margin-top: 25px;
     background-color: #000000b0;

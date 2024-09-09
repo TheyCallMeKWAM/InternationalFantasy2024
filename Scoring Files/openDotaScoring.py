@@ -61,7 +61,7 @@ player_dict = {
     "Saika": 124801257,
     "gpk~": 480412663,
     "TORONTOTOKYO": 431770905,
-    "MieRo": 165564598,
+    "MieRo`": 165564598,
     "Topson": 94054712,
     "Whitemon": 136829091,
     "9Class": 164199202,
@@ -240,7 +240,7 @@ def process_submission(submission_id, submission, match_data_cache):
     return total_score
 
 def main():
-    match_ids = [7933540966,7933607087,7933710437,7933833565,7933944690,7934129660,7934252472,7934359821,7933465064]  # Example match IDs
+    match_ids = [7935041049,7935087384,7935152091,7935409271,7935519998,7935234871,7935308931,7935628244,7935724693]  # Example match IDs
 
     # Fetch match data once and store in a cache
     match_data_cache = {}

@@ -240,7 +240,7 @@ def process_submission(submission_id, submission, match_data_cache):
     return total_score
 
 def main():
-    match_ids = [7935041049,7935087384,7935152091,7935409271,7935519998,7935234871,7935308931,7935628244,7935724693]  # Example match IDs
+    match_ids = [7936398486,7936468334,7936520519,7936609569,7936701967,7936796980,7936911418,7937026070,7937136410,7937235680,7937293101]  # Example match IDs
 
     # Fetch match data once and store in a cache
     match_data_cache = {}

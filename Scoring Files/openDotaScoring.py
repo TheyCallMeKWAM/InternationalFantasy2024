@@ -117,7 +117,16 @@ player_dict = {
     "watson`": 171262902,
     "DM": 56351509,
     "No[o]ne-": 106573901,
-    "Saksa": 103735745
+    "Saksa": 103735745,
+
+
+    "Miracle" : 105248644,
+    "MC" : 34505203, 
+    "kuroky" : 82262664, 
+    "gh" : 101356886, 
+    "matumbaman" : 72312627,
+    "Sccc":149486894,
+    "Moogy": 117281554
 }
 
 def get_match_data(match_id):
@@ -131,14 +140,59 @@ def get_match_data(match_id):
         except requests.RequestException as e:
             logging.error(f"Error fetching match data for match ID {match_id}: {e}")
     return {}
+def calculate_player_score(player_data, match_data):
+    # Initialize the score and breakdown dictionary
+    score = 0
+    breakdown = {}
 
-def calculate_player_score(player_data):
-    score = sum(
-        player_data.get(stat, 0) * multiplier
-        for stat, multiplier in SCORING_VALUES.items() if stat in player_data
-    )
-    logging.debug(f"Calculated player score: {score} for data: {player_data}")
+    # Calculate individual stats
+    for stat, multiplier in SCORING_VALUES.items():
+        stat_value = player_data.get(stat, 0)
+        stat_score = stat_value * multiplier
+        score += stat_score
+        breakdown[stat] = {
+            'value': stat_value,
+            'multiplier': multiplier,
+            'score': stat_score
+        }
+
+    # Calculate 20_plus_kills_assists_bonus
+    kills = player_data.get('kills', 0)
+    assists = player_data.get('assists', 0)
+    if kills >= 20 or assists >= 20:
+        bonus = SCORING_VALUES['20_plus_kills_assists_bonus']
+        score += bonus
+        breakdown['20_plus_kills_assists_bonus'] = {
+            'value': max(kills, assists),  # To show which stat contributed
+            'multiplier': 1,  # Not used, but to show it's added
+            'score': bonus
+        }
+
+    match_win = player_data.get('win', 0)  # 1 for win, 0 for loss
+
+    # Apply match win bonus if the player’s team won
+    if match_win == 1:
+        match_win_score = SCORING_VALUES['match_win_bonus']
+        score += match_win_score
+        breakdown['match_win_bonus'] = {
+            'value': 1,  # Not used, but to show it's added
+            'multiplier': 1,
+            'score': match_win_score
+        }
+
+        # Check match duration for under_25_min_bonus, only if the player won
+        match_duration = match_data.get('duration', 0)  # Duration in seconds
+        if match_duration < 1500:  # Less than 25 minutes
+            bonus = SCORING_VALUES['under_25_min_bonus']
+            score += bonus
+            breakdown['under_25_min_bonus'] = {
+                'value': match_duration,  # To show the duration
+                'multiplier': 1,  # Not used, but to show it's added
+                'score': bonus
+            }
+
     return score
+
 
 def count_destroyed_towers(bitmask):
     bitmask_binary = bin(bitmask)[2:].zfill(11)
@@ -186,7 +240,6 @@ def calculate_team_score(match_data, team_name):
 
     team_score += first_blood
 
-    logging.debug(f"Calculated team score: {team_score} for team '{team_name}'")
     return team_score
 
 def process_player(player_name, match_data_cache):
@@ -202,13 +255,11 @@ def process_player(player_name, match_data_cache):
         player_data = next((p for p in match_data.get('players', []) if p.get('account_id') == player_id), {})
         
         if player_data:
-            player_score += calculate_player_score(player_data)
+            player_score += calculate_player_score(player_data, match_data)
             found_in_any_match = True
 
     if not found_in_any_match:
         logging.warning(f"Player data not found for player ID {player_id} in any of the match IDs provided")
-
-    logging.debug(f"Total player score for {player_name}: {player_score}")
     return player_score
 
 def process_submission(submission_id, submission, match_data_cache):
@@ -235,12 +286,11 @@ def process_submission(submission_id, submission, match_data_cache):
     logging.info(f"Player scores for submission {user_name}: {player_scores_log}, team: {total_team_score}")
 
     total_score = total_player_score + total_team_score
-    logging.info(f"Total score for submission {user_name}: {total_score}")
 
     return total_score
 
 def main():
-    match_ids = [7940501580,7940546722,7940653890,7940718744,7940884177,7940981142,7941137970,7941236956]  # Example match IDs
+    match_ids = [7942638105,7942767036,7942358571,7942490677,7941965902,7942030630,7942136774,7942208056]  # Example match IDs
 
     # Fetch match data once and store in a cache
     match_data_cache = {}
@@ -259,6 +309,12 @@ def main():
             total_score = future.result()
             user_name = submissions.get(submission_id, {}).get('userName', 'Unknown User')
             results[user_name] = total_score
+
+            # Check detailed breakdown for Saika
+            if user_name == "Sean":
+                player_data = next((p for p in match_data_cache.values() if any(p.get('account_id') == player_dict.get("Saika") for p in p.get('players', []))), {})
+                if player_data:
+                    calculate_player_score(player_data, match_data_cache[next(iter(match_data_cache))])  # Use first match_data for demo
 
     logging.info(f"Results: {json.dumps(results, indent=2)}")
 

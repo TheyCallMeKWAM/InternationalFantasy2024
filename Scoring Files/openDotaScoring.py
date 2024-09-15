@@ -118,15 +118,8 @@ player_dict = {
     "DM": 56351509,
     "No[o]ne-": 106573901,
     "Saksa": 103735745,
+    "RAMZES666" : 132851371,
 
-
-    "Miracle" : 105248644,
-    "MC" : 34505203, 
-    "kuroky" : 82262664, 
-    "gh" : 101356886, 
-    "matumbaman" : 72312627,
-    "Sccc":149486894,
-    "Moogy": 117281554
 }
 
 def get_match_data(match_id):
